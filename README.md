@@ -1,46 +1,156 @@
-# Getting Started with Create React App
+# Workly Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Система трекинга вовлечённости сотрудников - фронтенд приложение.
 
-## Available Scripts
+## 🚀 Технологии
 
-In the project directory, you can run:
+- **React 19** - UI библиотека
+- **TypeScript** - типизация
+- **Tailwind CSS** - стилизация
+- **React Router** - навигация
+- **Axios** - HTTP клиент
+- **React Hot Toast** - уведомления
+- **Headless UI** - доступные компоненты
+- **Heroicons** - иконки
 
-### `npm start`
+## 📁 Структура проекта
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```
+src/
+├── api/              # Axios instance и эндпоинты
+├── assets/           # Изображения, иконки
+├── components/       # Переиспользуемые UI компоненты
+│   └── ui/          # Button, Input, Card, Modal и т.д.
+├── context/          # React Context (AuthContext)
+├── features/         # Функциональные модули
+│   ├── auth/        # Аутентификация
+│   └── users/       # Управление пользователями
+├── hooks/            # Общие хуки (useAuth)
+├── layouts/          # Шаблоны страниц
+├── pages/            # Страницы приложения
+│   ├── LoginPage/   # Страница входа
+│   └── UsersPage/   # Список сотрудников
+├── routes/           # Настройка роутинга
+├── styles/           # Глобальные стили
+├── types/            # TypeScript типы
+└── utils/            # Утилиты и константы
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## 🛠️ Установка и запуск
 
-### `npm test`
+### 1. Установка зависимостей
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+```
 
-### `npm run build`
+### 2. Настройка окружения
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Создайте файл `.env` в корне проекта:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```env
+REACT_APP_API_BASE_URL=http://localhost:8080
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 3. Запуск приложения
 
-### `npm run eject`
+```bash
+npm start
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Приложение откроется по адресу: [http://localhost:3000](http://localhost:3000)
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 4. Сборка для продакшена
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+npm run build
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## 🎨 Дизайн система
 
-## Learn More
+### Цветовая схема
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- **Primary (Indigo):** `#6366f1` - основной акцентный цвет
+- **Success (Green):** `#10b981` - успешные операции
+- **Danger (Red):** `#ef4444` - опасные действия, ошибки
+- **Gray:** различные оттенки для текста и фонов
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Типографика
+
+- **Font Family:** Inter, system fonts
+- **Sizes:**
+  - Заголовки: `text-2xl` (24px)
+  - Подзаголовки: `text-lg` (18px)
+  - Основной текст: `text-base` (16px)
+  - Вторичный текст: `text-sm` (14px)
+
+## 📄 Доступные страницы
+
+### `/login` - Страница входа
+- Email и пароль
+- Валидация полей
+- Обработка ошибок
+
+### `/users` - Список сотрудников (защищённый роут)
+- Карточки сотрудников
+- Поиск по имени/email
+- Фильтр по отделам
+- Пагинация
+- Редактирование и удаление
+
+## 🔐 Аутентификация
+
+Приложение использует JWT токены:
+- **Access Token** - для API запросов (добавляется автоматически)
+- **Refresh Token** - для обновления access токена
+
+При ошибке 401 пользователь автоматически перенаправляется на страницу входа.
+
+## 🧪 Генерация типов из OpenAPI
+
+Типы генерируются из `openapi.yaml`:
+
+```bash
+npx openapi-typescript openapi.yaml -o src/types/api.ts
+```
+
+## 📝 Скрипты
+
+- `npm start` - запуск dev сервера
+- `npm run build` - сборка для продакшена
+- `npm test` - запуск тестов
+- `npm run eject` - извлечение конфигурации CRA
+
+## 🌐 API
+
+Backend должен быть запущен на `http://localhost:8080` (или указан в `.env`).
+
+API endpoints определены в `src/api/endpoints.ts`.
+
+## ⚠️ Обработка ошибок
+
+Приложение информирует пользователя о:
+- Ошибках валидации форм
+- Сетевых ошибках
+- Пустых результатах поиска
+- Необратимых операциях (удаление)
+
+Используются:
+- **Toast уведомления** - для мгновенной обратной связи
+- **Confirm Dialog** - для подтверждения опасных действий
+- **Inline ошибки** - под полями форм
+- **Состояния ошибок** - на страницах
+
+## 🎯 TODO
+
+- [ ] Модалка добавления сотрудника
+- [ ] Модалка редактирования сотрудника
+- [ ] Страница деталей сотрудника
+- [ ] Список отделов
+- [ ] Страница деталей отдела
+- [ ] Дашборд со статистикой
+- [ ] Управление рабочими сессиями
+
+## 📦 Версия
+
+1.0.0 - Начальная версия с базовым функционалом

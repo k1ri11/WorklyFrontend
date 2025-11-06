@@ -36,11 +36,11 @@ export const useUsers = (initialFilters?: UserFilters): UseUsersResult => {
         page_size: pageSize,
       });
       
-      setUsers(response.users);
-      setTotal(response.total);
-      setTotalPages(response.total_pages);
-      setCurrentPage(response.page);
-      setPageSize(response.page_size);
+      setUsers(response.users || []);
+      setTotal(response.total || 0);
+      setTotalPages(response.total_pages || 0);
+      setCurrentPage(response.page || 1);
+      setPageSize(response.page_size || 20);
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Ошибка при загрузке списка сотрудников';
       setError(errorMessage);

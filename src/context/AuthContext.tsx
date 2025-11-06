@@ -48,6 +48,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (credentials: LoginRequest) => {
     const response = await authApi.login(credentials);
     
+    if (!response.access_token || !response.refresh_token || !response.user) {
+      throw new Error('Неполный ответ от сервера при входе');
+    }
+    
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.access_token);
     localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.refresh_token);
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user));
@@ -57,6 +61,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (data: RegisterRequest) => {
     const response = await authApi.register(data);
+    
+    if (!response.access_token || !response.refresh_token || !response.user) {
+      throw new Error('Неполный ответ от сервера при регистрации');
+    }
     
     localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.access_token);
     localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, response.refresh_token);

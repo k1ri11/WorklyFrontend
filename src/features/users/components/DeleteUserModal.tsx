@@ -18,7 +18,7 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleConfirm = async () => {
-    if (!user) return;
+    if (!user || !user.id) return;
 
     setIsDeleting(true);
     try {

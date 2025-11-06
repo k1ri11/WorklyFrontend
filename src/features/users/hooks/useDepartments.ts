@@ -24,7 +24,7 @@ export const useDepartments = (): UseDepartmentsResult => {
           page: 1,
           page_size: 100,
         });
-        setDepartments(response.departments);
+        setDepartments(response.departments || []);
       } catch (err: any) {
         const errorMessage = err.response?.data?.error || 'Ошибка при загрузке списка отделов';
         setError(errorMessage);

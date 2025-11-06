@@ -26,10 +26,12 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
     return () => clearTimeout(timeoutId);
   }, [searchValue, onSearchChange]);
 
-  const departmentOptions = departments.map((dept) => ({
-    value: dept.id,
-    label: dept.name,
-  }));
+  const departmentOptions = departments
+    .filter((dept) => dept.id !== undefined && dept.name !== undefined)
+    .map((dept) => ({
+      value: dept.id!,
+      label: dept.name!,
+    }));
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">

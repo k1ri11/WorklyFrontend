@@ -45,7 +45,9 @@ export const UsersPage: React.FC = () => {
   }, []);
 
   const handleEdit = (user: UserDTO) => {
-    toast.info(`Редактирование пользователя "${user.name}" будет реализовано в следующих версиях`);
+    toast(`Редактирование пользователя "${user.name}" будет реализовано в следующих версиях`, {
+      icon: 'ℹ️',
+    });
   };
 
   const handleDeleteClick = (user: UserDTO) => {
