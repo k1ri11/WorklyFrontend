@@ -4,4 +4,7 @@ export { Card } from './Card';
 export { Select } from './Select';
 export { Pagination } from './Pagination';
 export { Spinner } from './Spinner';
+export { Modal } from './Modal';
+export { ConfirmDialog } from './ConfirmDialog';
+export type { ConfirmDialogType } from './ConfirmDialog';
 
