@@ -5,6 +5,7 @@ import {
   UserFilters,
   CreateUserRequest,
   UpdateUserRequest,
+  UserScheduleDTO,
 } from '../../../types';
 
 export const listUsers = async (filters?: UserFilters): Promise<UserListResponse> => {
@@ -37,6 +38,11 @@ export const searchUsers = async (query: string, limit?: number): Promise<{ user
   const response = await axiosInstance.get<{ users: UserDTO[] }>(ENDPOINTS.USERS.SEARCH, {
     params: { query, limit },
   });
+  return response.data;
+};
+
+export const getUserSchedule = async (id: number): Promise<UserScheduleDTO> => {
+  const response = await axiosInstance.get<UserScheduleDTO>(ENDPOINTS.USERS.SCHEDULE(id));
   return response.data;
 };
 
