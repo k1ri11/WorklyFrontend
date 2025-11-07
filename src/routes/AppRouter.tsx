@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { LoginPage, UsersPage } from '../pages';
+import { LoginPage, UsersPage, UserDetailPage } from '../pages';
 import { ProtectedRoute } from './ProtectedRoute';
 import { useAuth } from '../hooks/useAuth';
 
@@ -21,6 +21,15 @@ export const AppRouter: React.FC = () => {
           element={
             <ProtectedRoute>
               <UsersPage />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/users/:id"
+          element={
+            <ProtectedRoute>
+              <UserDetailPage />
             </ProtectedRoute>
           }
         />
