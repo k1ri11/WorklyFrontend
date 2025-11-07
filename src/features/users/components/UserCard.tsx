@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import { UserDTO } from '../../../types';
 import { Card } from '../../../components/ui';
@@ -9,8 +10,21 @@ interface UserCardProps {
 }
 
 export const UserCard: React.FC<UserCardProps> = ({ user, onDelete }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    if (user.id) {
+      navigate(`/users/${user.id}`);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete(user);
+  };
+
   return (
-    <Card className="relative">
+    <Card className="relative cursor-pointer" onClick={handleCardClick}>
       <div className="space-y-2">
         <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
         
@@ -33,7 +47,7 @@ export const UserCard: React.FC<UserCardProps> = ({ user, onDelete }) => {
 
       <div className="mt-4 flex justify-end">
         <button
-          onClick={() => onDelete(user)}
+          onClick={handleDeleteClick}
           className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
           aria-label="Удалить"
           title="Удалить"
