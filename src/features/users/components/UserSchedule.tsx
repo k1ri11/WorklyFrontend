@@ -33,6 +33,9 @@ export const UserSchedule: React.FC<UserScheduleProps> = ({ schedule, isLoading,
   if (error) {
     return (
       <Card>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Расписание работы</h2>
+        </div>
         <div className="text-center py-8">
           <p className="text-red-600 text-sm">{error}</p>
         </div>
@@ -43,9 +46,12 @@ export const UserSchedule: React.FC<UserScheduleProps> = ({ schedule, isLoading,
   if (!schedule) {
     return (
       <Card>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">Расписание работы</h2>
+        </div>
         <div className="text-center py-8">
           <ClockIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <p className="text-gray-600">Расписание не найдено</p>
+          <p className="text-gray-600">Расписание работы не указано</p>
         </div>
       </Card>
     );

@@ -28,9 +28,14 @@ export const useUserSchedule = (userId: number | undefined): UseUserScheduleResu
       const scheduleData = await usersApi.getUserSchedule(userId);
       setSchedule(scheduleData);
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || 'Ошибка при загрузке расписания';
-      toast.error(errorMessage);
-      setError(errorMessage);
+      if (err.response?.status === 404) {
+        setSchedule(null);
+        setError(null);
+      } else {
+        const errorMessage = err.response?.data?.error || 'Ошибка при загрузке расписания';
+        toast.error(errorMessage);
+        setError(errorMessage);
+      }
     } finally {
       setIsLoading(false);
     }
