@@ -8,6 +8,8 @@ interface UserFiltersProps {
   onDepartmentChange: (departmentId: number | string) => void;
   departments: DepartmentDTO[];
   isLoadingDepartments: boolean;
+  searchValue?: string;
+  selectedDepartmentId?: number;
 }
 
 export const UserFilters: React.FC<UserFiltersProps> = ({
@@ -15,8 +17,14 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
   onDepartmentChange,
   departments,
   isLoadingDepartments,
+  searchValue: externalSearchValue = '',
+  selectedDepartmentId,
 }) => {
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState(externalSearchValue);
+
+  useEffect(() => {
+    setSearchValue(externalSearchValue);
+  }, [externalSearchValue]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -50,6 +58,7 @@ export const UserFilters: React.FC<UserFiltersProps> = ({
         <Select
           options={departmentOptions}
           onChange={onDepartmentChange}
+          value={selectedDepartmentId || ''}
           placeholder="Все отделы"
           disabled={isLoadingDepartments}
         />

@@ -25,16 +25,25 @@ export const useUsers = (initialFilters?: UserFilters): UseUsersResult => {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<UserFilters>(initialFilters || {});
 
+  useEffect(() => {
+    if (initialFilters) {
+      setFilters(initialFilters);
+      setCurrentPage(initialFilters.page || 1);
+    }
+  }, [initialFilters]);
+
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const response = await usersApi.listUsers({
+      const requestFilters = {
         ...filters,
         page: currentPage,
         page_size: pageSize,
-      });
+      };
+      
+      const response = await usersApi.listUsers(requestFilters);
       
       setUsers(response.users || []);
       setTotal(response.total || 0);

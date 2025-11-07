@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import toast from 'react-hot-toast';
 import { useUsers, useDepartments } from '../../features/users';
 import { UserCard, UserFilters, DeleteUserModal } from '../../features/users';
 import { Pagination, Spinner } from '../../components/ui';
@@ -44,12 +43,6 @@ export const UsersPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const handleEdit = (user: UserDTO) => {
-    toast(`Редактирование пользователя "${user.name}" будет реализовано в следующих версиях`, {
-      icon: 'ℹ️',
-    });
-  };
-
   const handleDeleteClick = (user: UserDTO) => {
     setSelectedUser(user);
     setIsDeleteModalOpen(true);
@@ -90,6 +83,8 @@ export const UsersPage: React.FC = () => {
             onDepartmentChange={handleDepartmentChange}
             departments={departments}
             isLoadingDepartments={isLoadingDepartments}
+            searchValue={filters.search}
+            selectedDepartmentId={filters.department_id}
           />
         </div>
 
@@ -144,7 +139,6 @@ export const UsersPage: React.FC = () => {
                 <UserCard
                   key={user.id}
                   user={user}
-                  onEdit={handleEdit}
                   onDelete={handleDeleteClick}
                 />
               ))}
