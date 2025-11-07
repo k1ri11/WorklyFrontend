@@ -1,9 +1,11 @@
 import React, { useState, useCallback } from 'react';
+import toast from 'react-hot-toast';
 import { useUsers, useDepartments } from '../../features/users';
-import { UserCard, UserFilters, DeleteUserModal } from '../../features/users';
-import { Pagination, Spinner } from '../../components/ui';
-import { UserDTO, UserFilters as IUserFilters } from '../../types';
-import { UserCircleIcon } from '@heroicons/react/24/outline';
+import { UserCard, UserFilters, DeleteUserModal, AddUserModal } from '../../features/users';
+import * as usersApi from '../../features/users/services/usersApi';
+import { Pagination, Spinner, Button } from '../../components/ui';
+import { UserDTO, UserFilters as IUserFilters, CreateUserRequest } from '../../types';
+import { UserCircleIcon, PlusIcon } from '@heroicons/react/24/outline';
 
 export const UsersPage: React.FC = () => {
   const [filters, setFilters] = useState<IUserFilters>({
@@ -18,6 +20,8 @@ export const UsersPage: React.FC = () => {
 
   const [selectedUser, setSelectedUser] = useState<UserDTO | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleSearchChange = useCallback((search: string) => {
     setFilters((prev) => ({
@@ -59,6 +63,30 @@ export const UsersPage: React.FC = () => {
     setSelectedUser(null);
   };
 
+  const handleAddUser = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+  const handleSaveUser = async (data: CreateUserRequest) => {
+    setIsCreating(true);
+    try {
+      await usersApi.createUser(data);
+      toast.success('Сотрудник успешно добавлен');
+      setIsAddModalOpen(false);
+      refetch();
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Ошибка при добавлении сотрудника';
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   if (isLoading && users.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -70,11 +98,17 @@ export const UsersPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Список сотрудников</h1>
-          <p className="text-gray-600">
-            Всего сотрудников: <span className="font-medium">{total}</span>
-          </p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-2">Список сотрудников</h1>
+            <p className="text-gray-600">
+              Всего сотрудников: <span className="font-medium">{total}</span>
+            </p>
+          </div>
+          <Button variant="primary" onClick={handleAddUser}>
+            <PlusIcon className="w-5 h-5 mr-2" />
+            Добавить сотрудника
+          </Button>
         </div>
 
         <div className="mb-6">
@@ -160,6 +194,13 @@ export const UsersPage: React.FC = () => {
         isOpen={isDeleteModalOpen}
         onClose={handleCloseDeleteModal}
         onConfirm={handleDeleteConfirm}
+      />
+
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={handleCloseAddModal}
+        onSave={handleSaveUser}
+        isLoading={isCreating}
       />
     </div>
   );
