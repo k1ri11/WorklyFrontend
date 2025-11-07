@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, UsersPage, UserDetailPage } from '../pages';
 import { ProtectedRoute } from './ProtectedRoute';
 import { useAuth } from '../hooks/useAuth';
+import { SessionControl } from '../features/sessions';
 
 export const AppRouter: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -13,6 +14,7 @@ export const AppRouter: React.FC = () => {
 
   return (
     <BrowserRouter>
+      {isAuthenticated && <SessionControl />}
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         
