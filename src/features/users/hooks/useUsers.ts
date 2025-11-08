@@ -25,12 +25,17 @@ export const useUsers = (initialFilters?: UserFilters): UseUsersResult => {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<UserFilters>(initialFilters || {});
 
+  // Используем JSON.stringify для глубокого сравнения фильтров
+  const filtersKey = JSON.stringify(initialFilters || {});
+  
   useEffect(() => {
     if (initialFilters) {
       setFilters(initialFilters);
       setCurrentPage(initialFilters.page || 1);
+      setPageSize(initialFilters.page_size || 20);
     }
-  }, [initialFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtersKey]);
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true);

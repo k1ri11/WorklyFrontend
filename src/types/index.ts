@@ -17,9 +17,12 @@ export type RefreshResponse = components['schemas']['RefreshResponse'];
 
 export type UserListResponse = components['schemas']['UserListResponse'];
 export type DepartmentListResponse = components['schemas']['DepartmentListResponse'];
+export type DepartmentUsersResponse = components['schemas']['DepartmentUsersResponse'];
 
 export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type UpdateUserRequest = components['schemas']['UpdateUserRequest'];
+export type UpdateDepartmentRequest = components['schemas']['UpdateDepartmentRequest'];
+export type DepartmentUsersRequest = components['schemas']['DepartmentUsersRequest'];
 
 export interface PaginationParams {
   page?: number;
