@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { format, subDays } from 'date-fns';
+import { format, subDays, parse } from 'date-fns';
 import { DateRangePicker } from '../../components/ui/DateRangePicker';
 import { Select } from '../../components/ui/Select';
 import { Card } from '../../components/ui/Card';
 import { Spinner } from '../../components/ui/Spinner';
-import { useDepartmentDetails, useTopEngagements } from '../../features/statistics';
+import { useDepartmentDetails, useTopEngagements, useDailyEngagement } from '../../features/statistics';
 import { useDepartmentsList } from '../../features/departments/hooks/useDepartmentsList';
 import { TopPerformerDTO } from '../../types';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const formatHoursAndMinutes = (hours: number): string => {
   const h = Math.floor(hours);
@@ -63,7 +64,30 @@ export const DashboardPage: React.FC = () => {
 
   const { data: topEngagements, isLoading: isLoadingEngagements } = useTopEngagements(topEngagementsParams);
 
-  const isLoading = isLoadingDetails || isLoadingEngagements || isLoadingDepartments;
+  const { data: dailyEngagement, isLoading: isLoadingDailyEngagement } = useDailyEngagement({
+    departmentId: selectedDepartmentId,
+    from: fromDate,
+    to: toDate,
+  });
+
+  const chartData = useMemo(() => {
+    if (!dailyEngagement?.items) return [];
+    
+    return dailyEngagement.items
+      .filter((item) => item.date && item.engagement !== undefined)
+      .map((item) => {
+        const date = parse(item.date!, 'yyyy-MM-dd', new Date());
+        return {
+          date: format(date, 'dd.MM'),
+          dateValue: date.getTime(),
+          engagement: Math.round((item.engagement || 0) * 100),
+        };
+      })
+      .sort((a, b) => a.dateValue - b.dateValue)
+      .map(({ dateValue, ...rest }) => rest);
+  }, [dailyEngagement]);
+
+  const isLoading = isLoadingDetails || isLoadingEngagements || isLoadingDepartments || isLoadingDailyEngagement;
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -127,6 +151,54 @@ export const DashboardPage: React.FC = () => {
       ) : (
         <div className="text-center py-8 text-gray-500">
           Выберите отдел для отображения статистики
+        </div>
+      )}
+
+      {/* Daily Engagement Chart */}
+      {selectedDepartmentId && (
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">График вовлеченности по дням</h2>
+          {isLoadingDailyEngagement ? (
+            <div className="flex justify-center py-8">
+              <Spinner />
+            </div>
+          ) : chartData.length > 0 ? (
+            <Card className="p-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    domain={[0, 100]}
+                    tick={{ fontSize: 12 }}
+                    label={{ value: 'Вовлеченность (%)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [`${value}%`, 'Вовлеченность']}
+                    labelStyle={{ color: '#374151' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="engagement" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </Card>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              Нет данных для отображения графика
+            </div>
+          )}
         </div>
       )}
 

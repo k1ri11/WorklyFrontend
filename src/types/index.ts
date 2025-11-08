@@ -21,6 +21,8 @@ export type DepartmentUsersResponse = components['schemas']['DepartmentUsersResp
 export type DepartmentDetailsResponse = components['schemas']['DepartmentDetailsResponse'];
 export type TopPerformersResponse = components['schemas']['TopPerformersResponse'];
 export type TopPerformerDTO = components['schemas']['TopPerformerDTO'];
+export type DailyEngagementResponse = components['schemas']['DailyEngagementResponse'];
+export type DailyEngagementItem = components['schemas']['DailyEngagementItem'];
 
 export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type UpdateUserRequest = components['schemas']['UpdateUserRequest'];

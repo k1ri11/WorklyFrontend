@@ -1,5 +1,5 @@
 import { axiosInstance, ENDPOINTS } from '../../../api';
-import { DepartmentDetailsResponse, TopPerformersResponse } from '../../../types';
+import { DepartmentDetailsResponse, TopPerformersResponse, DailyEngagementResponse } from '../../../types';
 
 interface DepartmentDetailsParams {
   departmentId: number;
@@ -13,6 +13,12 @@ interface TopEngagementsParams {
   departmentId?: number;
   from?: string;
   to?: string;
+}
+
+interface DailyEngagementParams {
+  departmentId: number;
+  from: string;
+  to: string;
 }
 
 export const getDepartmentDetails = async (params: DepartmentDetailsParams): Promise<DepartmentDetailsResponse> => {
@@ -34,6 +40,17 @@ export const getTopEngagements = async (params?: TopEngagementsParams): Promise<
       departmentId: params?.departmentId,
       from: params?.from,
       to: params?.to,
+    },
+  });
+  return response.data;
+};
+
+export const getDailyEngagement = async (params: DailyEngagementParams): Promise<DailyEngagementResponse> => {
+  const response = await axiosInstance.get<DailyEngagementResponse>(ENDPOINTS.STATISTICS.DAILY_ENGAGEMENT, {
+    params: {
+      departmentId: params.departmentId,
+      from: params.from,
+      to: params.to,
     },
   });
   return response.data;
