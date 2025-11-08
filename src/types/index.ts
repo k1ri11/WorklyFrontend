@@ -18,6 +18,9 @@ export type RefreshResponse = components['schemas']['RefreshResponse'];
 export type UserListResponse = components['schemas']['UserListResponse'];
 export type DepartmentListResponse = components['schemas']['DepartmentListResponse'];
 export type DepartmentUsersResponse = components['schemas']['DepartmentUsersResponse'];
+export type DepartmentDetailsResponse = components['schemas']['DepartmentDetailsResponse'];
+export type TopPerformersResponse = components['schemas']['TopPerformersResponse'];
+export type TopPerformerDTO = components['schemas']['TopPerformerDTO'];
 
 export type CreateUserRequest = components['schemas']['CreateUserRequest'];
 export type UpdateUserRequest = components['schemas']['UpdateUserRequest'];

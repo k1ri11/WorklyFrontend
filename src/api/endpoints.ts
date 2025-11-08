@@ -46,6 +46,8 @@ export const ENDPOINTS = {
     ABSENCES: `${API_PREFIX}/statistics/absences`,
     TOP_PERFORMERS: `${API_PREFIX}/statistics/top-performers`,
     AVERAGE_WORKTIME: `${API_PREFIX}/statistics/average-worktime`,
+    DEPARTMENT_DETAILS: `${API_PREFIX}/statistics/department-details`,
+    TOP_ENGAGEMENTS: `${API_PREFIX}/statistics/top-engagements`,
   },
 } as const;
 

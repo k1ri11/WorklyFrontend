@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { BuildingOfficeIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { BuildingOfficeIcon, UserGroupIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 export const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -46,6 +46,20 @@ export const Header: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <BuildingOfficeIcon className="w-5 h-5" />
                   <span>Отделы</span>
+                </div>
+              </Link>
+              
+              <Link
+                to="/dashboard"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive('/dashboard')
+                    ? 'bg-primary-100 text-primary-700'
+                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <ChartBarIcon className="w-5 h-5" />
+                  <span>Дашборд</span>
                 </div>
               </Link>
             </nav>

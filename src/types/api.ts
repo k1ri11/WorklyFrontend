@@ -369,15 +369,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/statistics/top-performers": {
+    "/api/v1/statistics/top-engagements": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Топ сотрудников по средней вовлеченности и стабильности работы */
-        get: operations["getTopPerformers"];
+        /** Топ сотрудников по вовлеченности */
+        get: operations["getTopEngagements"];
         put?: never;
         post?: never;
         delete?: never;
@@ -386,15 +386,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/statistics/average-worktime": {
+    "/api/v1/statistics/department-details": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Среднее рабочее время по отделу за выбранный период */
-        get: operations["getAverageWorktime"];
+        /** Детальная статистика по отделу за выбранный период */
+        get: operations["getDepartmentDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/statistics/daily-engagement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Средняя вовлеченность в день по работникам отдела */
+        get: operations["getDailyEngagement"];
         put?: never;
         post?: never;
         delete?: never;
@@ -921,16 +938,10 @@ export interface components {
             department_name?: string | null;
             /**
              * Format: float
-             * @description Вовлеченность (средние часы работы в день)
-             * @example 8.5
-             */
-            engagement?: number;
-            /**
-             * Format: float
-             * @description Стабильность работы (0-1, где 1 - максимальная стабильность)
+             * @description Вовлеченность (0-1, где 1 - максимальная вовлеченность)
              * @example 0.85
              */
-            stability?: number;
+            engagement?: number;
             /**
              * Format: float
              * @description Среднее рабочее время в часах
@@ -962,6 +973,72 @@ export interface components {
              * @example 7.5
              */
             avg_hours?: number;
+        };
+        DepartmentDetailsResponse: {
+            /**
+             * Format: int64
+             * @example 2
+             */
+            department_id?: number;
+            /** @example IT отдел */
+            department_name?: string | null;
+            /**
+             * Format: date
+             * @description Начальная дата (формат YYYY-MM-DD)
+             * @example 2025-10-01
+             */
+            from_date?: string;
+            /**
+             * Format: date
+             * @description Конечная дата (формат YYYY-MM-DD)
+             * @example 2025-10-31
+             */
+            to_date?: string;
+            /**
+             * Format: float
+             * @description Среднее рабочее время в часах
+             * @example 7.5
+             */
+            avg_worktime_hours?: number;
+            /**
+             * Format: float
+             * @description Среднее время перерыва в минутах
+             * @example 45.5
+             */
+            avg_break_minutes?: number;
+            /**
+             * @description Количество сотрудников в отделе
+             * @example 15
+             */
+            employees_count?: number;
+            /**
+             * @description Количество отклонений от графика (начал позже или закончил раньше на 30+ минут)
+             * @example 5
+             */
+            schedule_deviations?: number;
+            /**
+             * @description Общее количество рабочих сессий за период
+             * @example 120
+             */
+            total_sessions?: number;
+        };
+        DailyEngagementItem: {
+            /**
+             * Format: date
+             * @description Дата (формат YYYY-MM-DD)
+             * @example 2025-10-01
+             */
+            date?: string;
+            /**
+             * Format: float
+             * @description Средняя вовлеченность за день (0-1)
+             * @example 0.85
+             */
+            engagement?: number;
+        };
+        DailyEngagementResponse: {
+            /** @description Массив данных по дням */
+            items?: components["schemas"]["DailyEngagementItem"][];
         };
     };
     responses: never;
@@ -2137,11 +2214,15 @@ export interface operations {
             };
         };
     };
-    getTopPerformers: {
+    getTopEngagements: {
         parameters: {
             query?: {
                 /** @description Количество сотрудников в топе */
                 limit?: number;
+                /** @description Порядок сортировки (desc - лучшие, asc - худшие) */
+                order?: "asc" | "desc";
+                /** @description Фильтр по отделу (опционально) */
+                departmentId?: number;
             };
             header?: never;
             path?: never;
@@ -2169,13 +2250,21 @@ export interface operations {
             };
         };
     };
-    getAverageWorktime: {
+    getDepartmentDetails: {
         parameters: {
             query: {
                 /** @description ID отдела */
                 departmentId: number;
-                /** @description Период статистики */
-                period?: "week" | "month" | "year";
+                /**
+                 * @description Начальная дата (формат YYYY-MM-DD)
+                 * @example 2025-10-01
+                 */
+                from: string;
+                /**
+                 * @description Конечная дата (формат YYYY-MM-DD)
+                 * @example 2025-10-31
+                 */
+                to: string;
             };
             header?: never;
             path?: never;
@@ -2183,13 +2272,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Среднее рабочее время по отделу */
+            /** @description Детальная статистика по отделу */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AverageWorktimeResponse"];
+                    "application/json": components["schemas"]["DepartmentDetailsResponse"];
                 };
             };
             /** @description Ошибка валидации */
@@ -2203,6 +2292,75 @@ export interface operations {
             };
             /** @description Неавторизованный запрос */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Отдел не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getDailyEngagement: {
+        parameters: {
+            query: {
+                /** @description ID отдела */
+                departmentId: number;
+                /**
+                 * @description Начальная дата (формат YYYY-MM-DD)
+                 * @example 2025-10-01
+                 */
+                from: string;
+                /**
+                 * @description Конечная дата (формат YYYY-MM-DD)
+                 * @example 2025-10-31
+                 */
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Средняя вовлеченность по дням */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DailyEngagementResponse"];
+                };
+            };
+            /** @description Ошибка валидации */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Неавторизованный запрос */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Отдел не найден */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
