@@ -797,6 +797,11 @@ export interface components {
             /** @example Иван Иванов */
             manager_name?: string | null;
             /**
+             * @description Количество сотрудников в отделе
+             * @example 15
+             */
+            users_count?: number;
+            /**
              * Format: int64
              * @description Unix timestamp
              * @example 1640995200
