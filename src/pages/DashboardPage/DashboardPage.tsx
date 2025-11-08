@@ -7,7 +7,8 @@ import { Spinner } from '../../components/ui/Spinner';
 import { useDepartmentDetails, useTopEngagements, useDailyEngagement } from '../../features/statistics';
 import { useDepartmentsList } from '../../features/departments/hooks/useDepartmentsList';
 import { TopPerformerDTO } from '../../types';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { EngagementCircle } from '../../components/ui/EngagementCircle';
 
 const formatHoursAndMinutes = (hours: number): string => {
   const h = Math.floor(hours);
@@ -94,20 +95,35 @@ export const DashboardPage: React.FC = () => {
       <h1 className="text-2xl font-bold mb-6">Дашборд</h1>
 
       {/* Filters */}
-      <div className="mb-6 space-y-4">
-        <DateRangePicker
-          fromDate={fromDate}
-          toDate={toDate}
-          onFromChange={setFromDate}
-          onToChange={setToDate}
-        />
-        <div className="max-w-md">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="w-full sm:w-1/2 flex gap-4">
+          <div className="flex-1">
+            <label className="label">От</label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              max={toDate}
+              className="input w-full"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="label">До</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              min={fromDate}
+              className="input w-full"
+            />
+          </div>
+        </div>
+        <div className="w-full sm:w-1/2">
           <Select
             label="Отдел"
             value={selectedDepartmentId?.toString() || ''}
             onChange={(value) => setSelectedDepartmentId(value ? Number(value) : undefined)}
             options={departmentOptions}
-            placeholder="Выберите отдел"
           />
         </div>
       </div>
@@ -148,59 +164,60 @@ export const DashboardPage: React.FC = () => {
             <div className="text-2xl font-bold">{departmentDetails.schedule_deviations || 0}</div>
           </Card>
         </div>
-      ) : (
-        <div className="text-center py-8 text-gray-500">
-          Выберите отдел для отображения статистики
-        </div>
-      )}
+      ) : null}
 
       {/* Daily Engagement Chart */}
-      {selectedDepartmentId && (
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">График вовлеченности по дням</h2>
-          {isLoadingDailyEngagement ? (
-            <div className="flex justify-center py-8">
-              <Spinner />
-            </div>
-          ) : chartData.length > 0 ? (
-            <Card className="p-6">
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fontSize: 12 }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis 
-                    domain={[0, 100]}
-                    tick={{ fontSize: 12 }}
-                    label={{ value: 'Вовлеченность (%)', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [`${value}%`, 'Вовлеченность']}
-                    labelStyle={{ color: '#374151' }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="engagement" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Card>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              Нет данных для отображения графика
-            </div>
-          )}
-        </div>
-      )}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">График вовлеченности по дням</h2>
+        {isLoadingDailyEngagement ? (
+          <div className="flex justify-center py-8">
+            <Spinner />
+          </div>
+        ) : chartData.length > 0 ? (
+          <Card className="p-6">
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.9}/>
+                    <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.1}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="date" 
+                  tick={{ fontSize: 12 }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  domain={[0, 100]}
+                  tick={{ fontSize: 12 }}
+                  label={{ value: 'Вовлеченность (%)', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip 
+                  formatter={(value: number) => [`${value}%`, 'Вовлеченность']}
+                  labelStyle={{ color: '#374151' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="engagement" 
+                  stroke="#4f46e5" 
+                  strokeWidth={2}
+                  fill="url(#colorEngagement)"
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Card>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Нет данных для отображения графика
+          </div>
+        )}
+      </div>
 
       {/* Top Engagements */}
       <div className="mb-6">
@@ -211,7 +228,7 @@ export const DashboardPage: React.FC = () => {
               onClick={() => setEngagementOrder('desc')}
               className={`px-4 py-2 rounded ${
                 engagementOrder === 'desc'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
@@ -221,7 +238,7 @@ export const DashboardPage: React.FC = () => {
               onClick={() => setEngagementOrder('asc')}
               className={`px-4 py-2 rounded ${
                 engagementOrder === 'asc'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
@@ -257,12 +274,19 @@ export const DashboardPage: React.FC = () => {
                           : '0ч 0м'}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-600">Вовлеченность</div>
-                      <div className="font-semibold">
-                        {performer.engagement !== undefined
-                          ? formatEngagement(performer.engagement)
-                          : '0%'}
+                    <div className="flex items-center gap-3">
+                      <EngagementCircle 
+                        engagement={performer.engagement !== undefined ? performer.engagement : 0}
+                        size={48}
+                        strokeWidth={4}
+                      />
+                      <div className="text-right">
+                        <div className="text-sm text-gray-600">Вовлеченность</div>
+                        <div className="font-semibold">
+                          {performer.engagement !== undefined
+                            ? formatEngagement(performer.engagement)
+                            : '0%'}
+                        </div>
                       </div>
                     </div>
                   </div>

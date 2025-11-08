@@ -7,5 +7,6 @@ export { Spinner } from './Spinner';
 export { Modal } from './Modal';
 export { ConfirmDialog } from './ConfirmDialog';
 export { DateRangePicker } from './DateRangePicker';
+export { EngagementCircle } from './EngagementCircle';
 export type { ConfirmDialogType } from './ConfirmDialog';
 

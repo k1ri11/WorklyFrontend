@@ -22,18 +22,12 @@ export const useDepartmentDetails = ({ departmentId, from, to }: UseDepartmentDe
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
-    if (!departmentId) {
-      setData(null);
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await statisticsApi.getDepartmentDetails({
-        departmentId,
+        ...(departmentId !== undefined && { departmentId }),
         from,
         to,
       });

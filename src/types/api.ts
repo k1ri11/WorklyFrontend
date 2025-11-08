@@ -2253,8 +2253,8 @@ export interface operations {
     getDepartmentDetails: {
         parameters: {
             query: {
-                /** @description ID отдела */
-                departmentId: number;
+                /** @description ID отдела (опционально, если не указан - данные по всем отделам) */
+                departmentId?: number;
                 /**
                  * @description Начальная дата (формат YYYY-MM-DD)
                  * @example 2025-10-01
@@ -2313,8 +2313,8 @@ export interface operations {
     getDailyEngagement: {
         parameters: {
             query: {
-                /** @description ID отдела */
-                departmentId: number;
+                /** @description ID отдела (опционально, если не указан - данные по всем отделам) */
+                departmentId?: number;
                 /**
                  * @description Начальная дата (формат YYYY-MM-DD)
                  * @example 2025-10-01

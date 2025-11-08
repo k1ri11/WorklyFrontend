@@ -22,18 +22,12 @@ export const useDailyEngagement = ({ departmentId, from, to }: UseDailyEngagemen
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    if (!departmentId) {
-      setData(null);
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
       const response = await statisticsApi.getDailyEngagement({
-        departmentId,
+        ...(departmentId !== undefined && { departmentId }),
         from,
         to,
       });

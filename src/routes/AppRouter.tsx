@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage, UsersPage, UserDetailPage, DepartmentsPage, DepartmentDetailPage, ProfilePage, DashboardPage } from '../pages';
 import { ProtectedRoute } from './ProtectedRoute';
 import { useAuth } from '../hooks/useAuth';
-import { SessionControl } from '../features/sessions';
 import { Header } from '../components/Header';
 
 export const AppRouter: React.FC = () => {
@@ -16,10 +15,7 @@ export const AppRouter: React.FC = () => {
   return (
     <BrowserRouter>
       {isAuthenticated && (
-        <>
-          <Header />
-          <SessionControl />
-        </>
+        <Header />
       )}
       <Routes>
         <Route path="/login" element={<LoginPage />} />

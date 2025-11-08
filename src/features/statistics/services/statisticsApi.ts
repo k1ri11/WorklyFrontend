@@ -2,7 +2,7 @@ import { axiosInstance, ENDPOINTS } from '../../../api';
 import { DepartmentDetailsResponse, TopPerformersResponse, DailyEngagementResponse } from '../../../types';
 
 interface DepartmentDetailsParams {
-  departmentId: number;
+  departmentId?: number;
   from: string;
   to: string;
 }
@@ -16,7 +16,7 @@ interface TopEngagementsParams {
 }
 
 interface DailyEngagementParams {
-  departmentId: number;
+  departmentId?: number;
   from: string;
   to: string;
 }
@@ -24,7 +24,7 @@ interface DailyEngagementParams {
 export const getDepartmentDetails = async (params: DepartmentDetailsParams): Promise<DepartmentDetailsResponse> => {
   const response = await axiosInstance.get<DepartmentDetailsResponse>(ENDPOINTS.STATISTICS.DEPARTMENT_DETAILS, {
     params: {
-      departmentId: params.departmentId,
+      ...(params.departmentId !== undefined && { departmentId: params.departmentId }),
       from: params.from,
       to: params.to,
     },
@@ -48,7 +48,7 @@ export const getTopEngagements = async (params?: TopEngagementsParams): Promise<
 export const getDailyEngagement = async (params: DailyEngagementParams): Promise<DailyEngagementResponse> => {
   const response = await axiosInstance.get<DailyEngagementResponse>(ENDPOINTS.STATISTICS.DAILY_ENGAGEMENT, {
     params: {
-      departmentId: params.departmentId,
+      ...(params.departmentId !== undefined && { departmentId: params.departmentId }),
       from: params.from,
       to: params.to,
     },
