@@ -676,6 +676,12 @@ export interface components {
              * @example 28800
              */
             total_duration?: number | null;
+            /**
+             * Format: int64
+             * @description Текущая продолжительность сессии в секундах (только для today endpoint, без учета перерывов)
+             * @example 14400
+             */
+            current_duration?: number | null;
             /** @example true */
             is_active?: boolean;
             breaks?: components["schemas"]["BreakDTO"][] | null;
@@ -1522,7 +1528,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionDTO"];
+                    "application/json": components["schemas"]["SuccessResponse"];
                 };
             };
             /** @description Ошибка валидации */
@@ -1564,7 +1570,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BreakDTO"];
+                    "application/json": components["schemas"]["SuccessResponse"];
                 };
             };
             /** @description Ошибка валидации */
@@ -1606,7 +1612,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessResponse"];
+                    "application/json": components["schemas"]["SessionDTO"];
                 };
             };
             /** @description Ошибка валидации */
@@ -1683,7 +1689,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Текущая сессия */
+            /** @description Текущая сессия (может быть null, если сессия не найдена) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -1694,15 +1700,6 @@ export interface operations {
             };
             /** @description Неавторизованный запрос */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Сессия не найдена */
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };
