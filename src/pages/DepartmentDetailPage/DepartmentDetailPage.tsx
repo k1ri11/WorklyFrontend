@@ -244,6 +244,9 @@ export const DepartmentDetailPage: React.FC = () => {
                         <div>
                           <p className="text-sm text-gray-600 mb-1">Руководитель отдела</p>
                           <p className="text-lg font-semibold text-gray-900">{department.manager_name}</p>
+                          {department.manager_email && (
+                            <p className="text-sm text-gray-500 mt-1">{department.manager_email}</p>
+                          )}
                         </div>
                       </div>
                     </div>

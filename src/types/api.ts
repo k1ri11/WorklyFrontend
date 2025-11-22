@@ -352,6 +352,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить список всех должностей */
+        get: operations["listPositions"];
+        put?: never;
+        /** Создать новую должность */
+        post: operations["createPosition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/positions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Получить информацию о конкретной должности */
+        get: operations["getPositionById"];
+        /** Обновить данные должности */
+        put: operations["updatePosition"];
+        post?: never;
+        /** Удалить должность */
+        delete: operations["deletePosition"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/statistics/absences": {
         parameters: {
             query?: never;
@@ -813,6 +850,8 @@ export interface components {
             description?: string | null;
             /** @example Иван Иванов */
             manager_name?: string | null;
+            /** @example ivan.ivanov@example.com */
+            manager_email?: string | null;
             /**
              * @description Количество сотрудников в отделе
              * @example 15
@@ -881,6 +920,38 @@ export interface components {
             users?: components["schemas"]["UserDTO"][];
             /** @example 10 */
             total?: number;
+        };
+        PositionDTO: {
+            /**
+             * Format: int64
+             * @example 1
+             */
+            id?: number;
+            /** @example Senior Developer */
+            title?: string;
+            /** @example Старший разработчик */
+            description?: string | null;
+            /**
+             * Format: int64
+             * @description Unix timestamp
+             * @example 1640995200
+             */
+            created_at?: number;
+        };
+        PositionListResponse: {
+            positions?: components["schemas"]["PositionDTO"][];
+        };
+        CreatePositionRequest: {
+            /** @example Senior Developer */
+            title: string;
+            /** @example Старший разработчик */
+            description?: string | null;
+        };
+        UpdatePositionRequest: {
+            /** @example Senior Developer */
+            title?: string;
+            /** @example Старший разработчик */
+            description?: string | null;
         };
         AbsenceItemDTO: {
             /**
@@ -2172,6 +2243,231 @@ export interface operations {
                 };
             };
             /** @description Отдел не найден */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listPositions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Список должностей */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionListResponse"];
+                };
+            };
+            /** @description Неавторизованный запрос */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    createPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePositionRequest"];
+            };
+        };
+        responses: {
+            /** @description Должность успешно создана */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionDTO"];
+                };
+            };
+            /** @description Ошибка валидации */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Неавторизованный запрос */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Должность с таким названием уже существует */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getPositionById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID должности */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Информация о должности */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionDTO"];
+                };
+            };
+            /** @description Неавторизованный запрос */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Должность не найдена */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    updatePosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID должности */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePositionRequest"];
+            };
+        };
+        responses: {
+            /** @description Должность успешно обновлена */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionDTO"];
+                };
+            };
+            /** @description Ошибка валидации */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Неавторизованный запрос */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Должность не найдена */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Должность с таким названием уже существует */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    deletePosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ID должности */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Должность успешно удалена */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponse"];
+                };
+            };
+            /** @description Неавторизованный запрос */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Должность не найдена */
             404: {
                 headers: {
                     [name: string]: unknown;

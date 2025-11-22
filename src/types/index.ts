@@ -2,6 +2,7 @@ import type { components } from './api';
 
 export type UserDTO = components['schemas']['UserDTO'];
 export type DepartmentDTO = components['schemas']['DepartmentDTO'];
+export type PositionDTO = components['schemas']['PositionDTO'];
 export type SessionDTO = components['schemas']['SessionDTO'];
 export type BreakDTO = components['schemas']['BreakDTO'];
 export type UserScheduleDTO = components['schemas']['UserScheduleDTO'];
@@ -17,6 +18,7 @@ export type RefreshResponse = components['schemas']['RefreshResponse'];
 
 export type UserListResponse = components['schemas']['UserListResponse'];
 export type DepartmentListResponse = components['schemas']['DepartmentListResponse'];
+export type PositionListResponse = components['schemas']['PositionListResponse'];
 export type DepartmentUsersResponse = components['schemas']['DepartmentUsersResponse'];
 export type DepartmentDetailsResponse = components['schemas']['DepartmentDetailsResponse'];
 export type TopPerformersResponse = components['schemas']['TopPerformersResponse'];

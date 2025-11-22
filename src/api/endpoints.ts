@@ -41,6 +41,12 @@ export const ENDPOINTS = {
     USERS: (id: number | string) => `${API_PREFIX}/departments/${id}/users`,
   },
 
+  // Positions
+  POSITIONS: {
+    LIST: `${API_PREFIX}/positions`,
+    BY_ID: (id: number | string) => `${API_PREFIX}/positions/${id}`,
+  },
+
   // Statistics
   STATISTICS: {
     ABSENCES: `${API_PREFIX}/statistics/absences`,

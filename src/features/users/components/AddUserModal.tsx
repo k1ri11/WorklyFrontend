@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Input, Select, Button } from '../../../components/ui';
 import { useDepartments } from '../hooks/useDepartments';
+import { usePositions } from '../../../features/positions';
 import { CreateUserRequest } from '../../../types';
 import {
   UserIcon,
   EnvelopeIcon,
   LockClosedIcon,
   BuildingOfficeIcon,
+  BriefcaseIcon,
 } from '@heroicons/react/24/outline';
 
 interface AddUserModalProps {
@@ -23,11 +25,13 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   isLoading = false,
 }) => {
   const { departments, isLoading: isLoadingDepartments } = useDepartments();
-  const [formData, setFormData] = useState<Omit<CreateUserRequest, 'department_id'> & { department_id?: number }>({
+  const { positions, isLoading: isLoadingPositions } = usePositions();
+  const [formData, setFormData] = useState<Omit<CreateUserRequest, 'department_id'> & { department_id?: number; position_id?: number }>({
     name: '',
     email: '',
     password: '',
     department_id: undefined,
+    position_id: undefined,
     role_id: 2,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof CreateUserRequest, string>>>({});
@@ -39,8 +43,9 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
         email: '',
         password: '',
         department_id: undefined,
+        position_id: undefined,
         role_id: 2,
-      } as Omit<CreateUserRequest, 'department_id'> & { department_id?: number });
+      } as Omit<CreateUserRequest, 'department_id'> & { department_id?: number; position_id?: number });
       setErrors({});
     }
   }, [isOpen]);
@@ -101,6 +106,13 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
     .map((dept) => ({
       value: dept.id!,
       label: dept.name!,
+    }));
+
+  const positionOptions = positions
+    .filter((pos) => pos.id !== undefined && pos.title !== undefined)
+    .map((pos) => ({
+      value: pos.id!,
+      label: pos.title!,
     }));
 
   return (
@@ -181,6 +193,23 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
                 placeholder="Выберите отдел"
                 disabled={isLoading || isLoadingDepartments}
                 error={errors.department_id}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-5 h-5 text-gray-400 mt-0.5">
+              <BriefcaseIcon className="w-5 h-5" />
+            </div>
+            <div className="flex-1">
+              <Select
+                id="position_id"
+                label="Должность"
+                options={positionOptions}
+                value={formData.position_id || ''}
+                onChange={(value) => handleChange('position_id', value === '' ? undefined : Number(value))}
+                placeholder="Выберите должность"
+                disabled={isLoading || isLoadingPositions}
               />
             </div>
           </div>

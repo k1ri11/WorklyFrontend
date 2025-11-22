@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { UserDTO, UpdateUserRequest } from '../../../types';
 import { Card, Input, Select, Button } from '../../../components/ui';
 import { useDepartments } from '../hooks/useDepartments';
+import { usePositions } from '../../../features/positions';
 import {
   UserIcon,
   EnvelopeIcon,
   BuildingOfficeIcon,
+  BriefcaseIcon,
 } from '@heroicons/react/24/outline';
 
 interface UserEditFormProps {
@@ -22,10 +24,12 @@ export const UserEditForm: React.FC<UserEditFormProps> = ({
   isLoading = false,
 }) => {
   const { departments, isLoading: isLoadingDepartments } = useDepartments();
+  const { positions, isLoading: isLoadingPositions } = usePositions();
   const [formData, setFormData] = useState<UpdateUserRequest>({
     name: user.name || '',
     email: user.email || '',
     department_id: undefined,
+    position_id: undefined,
   });
   const [errors, setErrors] = useState<Partial<Record<keyof UpdateUserRequest, string>>>({});
 
@@ -37,6 +41,15 @@ export const UserEditForm: React.FC<UserEditFormProps> = ({
       }
     }
   }, [user.department, departments]);
+
+  useEffect(() => {
+    if (user.position && positions.length > 0) {
+      const position = positions.find((p) => p.title === user.position);
+      if (position?.id) {
+        setFormData((prev) => ({ ...prev, position_id: position.id }));
+      }
+    }
+  }, [user.position, positions]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof UpdateUserRequest, string>> = {};
@@ -77,6 +90,13 @@ export const UserEditForm: React.FC<UserEditFormProps> = ({
     .map((dept) => ({
       value: dept.id!,
       label: dept.name!,
+    }));
+
+  const positionOptions = positions
+    .filter((pos) => pos.id !== undefined && pos.title !== undefined)
+    .map((pos) => ({
+      value: pos.id!,
+      label: pos.title!,
     }));
 
   return (
@@ -139,12 +159,18 @@ export const UserEditForm: React.FC<UserEditFormProps> = ({
 
           <div className="flex items-start gap-3 py-3 border-b border-gray-100">
             <div className="flex-shrink-0 w-5 h-5 text-gray-400 mt-0.5">
-              <UserIcon className="w-5 h-5" />
+              <BriefcaseIcon className="w-5 h-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-gray-700 mb-1">Должность</p>
-              <p className="text-base text-gray-500">{user.position || 'Не указана'}</p>
-              <p className="text-xs text-gray-400 mt-1">Редактирование должности временно недоступно</p>
+              <Select
+                id="position_id"
+                label="Должность"
+                options={positionOptions}
+                value={formData.position_id || ''}
+                onChange={(value) => handleChange('position_id', value === '' ? undefined : Number(value))}
+                placeholder="Выберите должность"
+                disabled={isLoading || isLoadingPositions}
+              />
             </div>
           </div>
 
