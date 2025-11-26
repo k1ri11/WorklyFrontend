@@ -1,0 +1,2229 @@
+openapi: 3.0.3
+info:
+  title: Workly API
+  description: API для системы трекинга вовлечённости сотрудников
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags:
+        - System
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /api/v1/auth/register:
+    post:
+      summary: Регистрация нового пользователя
+      tags:
+        - Auth
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Пользователь успешно зарегистрирован
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Пользователь уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/login:
+    post:
+      summary: Авторизация пользователя
+      tags:
+        - Auth
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/refresh:
+    post:
+      summary: Обновление access токена
+      tags:
+        - Auth
+      operationId: refresh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Токен успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '401':
+          description: Неверный refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/logout:
+    post:
+      summary: Выход из системы
+      tags:
+        - Auth
+      operationId: logout
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/auth/me:
+    get:
+      summary: Получение информации о текущем пользователе
+      tags:
+        - Auth
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Информация о пользователе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/users:
+    get:
+      summary: Получить список всех пользователей
+      tags:
+        - Users
+      operationId: listUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Номер страницы
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Количество элементов на странице
+        - name: department_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Фильтр по отделу
+        - name: position_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Фильтр по должности
+        - name: role_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Фильтр по роли
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Поиск по имени или email
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Добавить нового пользователя
+      tags:
+        - Users
+      operationId: createUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: Пользователь успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/users/{id}:
+    get:
+      summary: Получить профиль конкретного пользователя
+      tags:
+        - Users
+      operationId: getUserById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Обновить профиль пользователя
+      tags:
+        - Users
+      operationId: updateUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Профиль успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Удалить пользователя
+      tags:
+        - Users
+      operationId: deleteUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
+      responses:
+        '200':
+          description: Пользователь успешно удален
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/users/{id}/schedule:
+    get:
+      summary: Получить персональное расписание работы
+      tags:
+        - Users
+      operationId: getUserSchedule
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
+      responses:
+        '200':
+          description: Расписание пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserScheduleDTO'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Пользователь не найден или расписание не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Изменить расписание работы
+      tags:
+        - Users
+      operationId: updateUserSchedule
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScheduleRequest'
+      responses:
+        '200':
+          description: Расписание успешно обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserScheduleDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/users/search:
+    get:
+      summary: Поиск по имени / email
+      tags:
+        - Users
+      operationId: searchUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Поисковый запрос
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Максимальное количество результатов
+      responses:
+        '200':
+          description: Результаты поиска
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/UserDTO'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/sessions/start:
+    post:
+      summary: Начать рабочую сессию
+      tags:
+        - Sessions
+      operationId: startSession
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Сессия успешно начата
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/sessions/pause:
+    post:
+      summary: Взять паузу (обед, кофе и т.д.)
+      tags:
+        - Sessions
+      operationId: pauseSession
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PauseSessionRequest'
+      responses:
+        '200':
+          description: Пауза успешно начата
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/sessions/resume:
+    post:
+      summary: Возобновить работу после паузы
+      tags:
+        - Sessions
+      operationId: resumeSession
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResumeSessionRequest'
+      responses:
+        '200':
+          description: Работа успешно возобновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/sessions/end:
+    post:
+      summary: Завершить рабочий день
+      tags:
+        - Sessions
+      operationId: endSession
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EndSessionRequest'
+      responses:
+        '200':
+          description: Сессия успешно завершена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/sessions/{userId}/today:
+    get:
+      summary: Текущая сессия сотрудника (если активна)
+      tags:
+        - Sessions
+      operationId: getTodaySession
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
+      responses:
+        '200':
+          description: Текущая сессия (может быть null, если сессия не найдена)
+          content:
+            application/json:
+              schema:
+                nullable: true
+                $ref: '#/components/schemas/SessionDTO'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/sessions/{userId}/history:
+    get:
+      summary: История всех сессий пользователя
+      tags:
+        - Sessions
+      operationId: getSessionHistory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID пользователя
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2025-10-01"
+          description: Начальная дата (YYYY-MM-DD)
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2025-10-21"
+          description: Конечная дата (YYYY-MM-DD)
+      responses:
+        '200':
+          description: История сессий
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionHistoryResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/sessions/statistics:
+    get:
+      summary: Сводная статистика (агрегация по всем пользователям или отделам)
+      tags:
+        - Sessions
+      operationId: getStatistics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: month
+          description: Период статистики
+        - name: department_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Фильтр по отделу (опционально)
+      responses:
+        '200':
+          description: Статистика
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatisticsResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/departments:
+    get:
+      summary: Получить список всех отделов
+      tags:
+        - Departments
+      operationId: listDepartments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+          description: Номер страницы
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+          description: Количество элементов на странице
+        - name: manager_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Фильтр по руководителю
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Поиск по названию отдела
+      responses:
+        '200':
+          description: Список отделов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentListResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Создать новый отдел
+      tags:
+        - Departments
+      operationId: createDepartment
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDepartmentRequest'
+      responses:
+        '201':
+          description: Отдел успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/departments/{id}:
+    get:
+      summary: Получить информацию о конкретном отделе
+      tags:
+        - Departments
+      operationId: getDepartmentById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID отдела
+      responses:
+        '200':
+          description: Информация об отделе
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentDTO'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Отдел не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Обновить данные отдела
+      tags:
+        - Departments
+      operationId: updateDepartment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID отдела
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDepartmentRequest'
+      responses:
+        '200':
+          description: Отдел успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Отдел не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Удалить отдел
+      tags:
+        - Departments
+      operationId: deleteDepartment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID отдела
+      responses:
+        '200':
+          description: Отдел успешно удален
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Отдел не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/departments/{id}/users:
+    get:
+      summary: Получить список сотрудников отдела
+      tags:
+        - Departments
+      operationId: getDepartmentUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID отдела
+      responses:
+        '200':
+          description: Список сотрудников отдела
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentUsersResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Отдел не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Добавить или удалить сотрудников из отдела
+      tags:
+        - Departments
+      operationId: updateDepartmentUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID отдела
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentUsersRequest'
+      responses:
+        '200':
+          description: Список сотрудников отдела успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentUsersResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Отдел не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/positions:
+    get:
+      summary: Получить список всех должностей
+      tags:
+        - Positions
+      operationId: listPositions
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список должностей
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionListResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Создать новую должность
+      tags:
+        - Positions
+      operationId: createPosition
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePositionRequest'
+      responses:
+        '201':
+          description: Должность успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Должность с таким названием уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/positions/{id}:
+    get:
+      summary: Получить информацию о конкретной должности
+      tags:
+        - Positions
+      operationId: getPositionById
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID должности
+      responses:
+        '200':
+          description: Информация о должности
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionDTO'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Должность не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Обновить данные должности
+      tags:
+        - Positions
+      operationId: updatePosition
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID должности
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePositionRequest'
+      responses:
+        '200':
+          description: Должность успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PositionDTO'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Должность не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Должность с таким названием уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Удалить должность
+      tags:
+        - Positions
+      operationId: deletePosition
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: ID должности
+      responses:
+        '200':
+          description: Должность успешно удалена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Должность не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/statistics/absences:
+    get:
+      summary: Список отсутствий и длительных перерывов по сотрудникам за период
+      tags:
+        - Statistics
+      operationId: getAbsences
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [week, month, year]
+            default: month
+          description: Период статистики
+      responses:
+        '200':
+          description: Список отсутствий и перерывов
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AbsencesResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/statistics/top-engagements:
+    get:
+      summary: Топ сотрудников по вовлеченности
+      tags:
+        - Statistics
+      operationId: getTopEngagements
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+          description: Количество сотрудников в топе
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: Порядок сортировки (desc - лучшие, asc - худшие)
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+            format: int64
+          description: Фильтр по отделу (опционально)
+      responses:
+        '200':
+          description: Список топ сотрудников
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopPerformersResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/statistics/department-details:
+    get:
+      summary: Детальная статистика по отделу за выбранный период
+      tags:
+        - Statistics
+      operationId: getDepartmentDetails
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: departmentId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: ID отдела (опционально, если не указан - данные по всем отделам)
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Начальная дата (формат YYYY-MM-DD)
+          example: "2025-10-01"
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Конечная дата (формат YYYY-MM-DD)
+          example: "2025-10-31"
+      responses:
+        '200':
+          description: Детальная статистика по отделу
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentDetailsResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Отдел не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/statistics/daily-engagement:
+    get:
+      summary: Средняя вовлеченность в день по работникам отдела
+      tags:
+        - Statistics
+      operationId: getDailyEngagement
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: departmentId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: ID отдела (опционально, если не указан - данные по всем отделам)
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Начальная дата (формат YYYY-MM-DD)
+          example: "2025-10-01"
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Конечная дата (формат YYYY-MM-DD)
+          example: "2025-10-31"
+      responses:
+        '200':
+          description: Средняя вовлеченность по дням
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyEngagementResponse'
+        '400':
+          description: Ошибка валидации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неавторизованный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Отдел не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - role_id
+        - department_id
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Иван Иванов
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 6
+          example: password123
+        position_id:
+          type: integer
+          format: int64
+          nullable: true
+          example: 1
+        role_id:
+          type: integer
+          format: int64
+          example: 1
+        department_id:
+          type: integer
+          format: int64
+          example: 1
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          example: password123
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          example: a1b2c3d4e5f6...
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refresh_token:
+          type: string
+          example: a1b2c3d4e5f6...
+        expires_in:
+          type: integer
+          description: Время жизни access токена в секундах
+          example: 900
+        user:
+          $ref: '#/components/schemas/UserDTO'
+
+    RefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        expires_in:
+          type: integer
+          example: 900
+
+    UserDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Иван Иванов
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        position:
+          type: string
+          nullable: true
+          example: Разработчик
+        role:
+          type: string
+          nullable: true
+          example: admin
+        department:
+          type: string
+          nullable: true
+          example: IT отдел
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+        updated_at:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Операция выполнена успешно
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Описание ошибки
+
+    CreateUserRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+        - role_id
+        - department_id
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Петр Сидоров
+        email:
+          type: string
+          format: email
+          example: petr@example.com
+        password:
+          type: string
+          minLength: 6
+          example: password123
+        position_id:
+          type: integer
+          format: int64
+          nullable: true
+          example: 2
+        role_id:
+          type: integer
+          format: int64
+          example: 2
+        department_id:
+          type: integer
+          format: int64
+          example: 1
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Петр Петрович Сидоров
+        email:
+          type: string
+          format: email
+          example: petr.new@example.com
+        position_id:
+          type: integer
+          format: int64
+          nullable: true
+          example: 3
+        role_id:
+          type: integer
+          format: int64
+          example: 1
+        department_id:
+          type: integer
+          format: int64
+          example: 2
+
+    UserListResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDTO'
+        total:
+          type: integer
+          format: int64
+          description: Общее количество пользователей
+          example: 42
+        page:
+          type: integer
+          description: Текущая страница
+          example: 1
+        page_size:
+          type: integer
+          description: Размер страницы
+          example: 20
+        total_pages:
+          type: integer
+          description: Общее количество страниц
+          example: 3
+
+    UserScheduleDTO:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          example: 1
+        monday:
+          type: string
+          nullable: true
+          example: "09:00-18:00"
+        tuesday:
+          type: string
+          nullable: true
+          example: "09:00-18:00"
+        wednesday:
+          type: string
+          nullable: true
+          example: "09:00-18:00"
+        thursday:
+          type: string
+          nullable: true
+          example: "09:00-18:00"
+        friday:
+          type: string
+          nullable: true
+          example: "09:00-18:00"
+        saturday:
+          type: string
+          nullable: true
+          example: "Выходной"
+        sunday:
+          type: string
+          nullable: true
+          example: "Выходной"
+        updated_at:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+
+    UpdateScheduleRequest:
+      type: object
+      properties:
+        monday:
+          type: string
+          nullable: true
+          example: "10:00-19:00"
+        tuesday:
+          type: string
+          nullable: true
+          example: "10:00-19:00"
+        wednesday:
+          type: string
+          nullable: true
+          example: "10:00-19:00"
+        thursday:
+          type: string
+          nullable: true
+          example: "10:00-19:00"
+        friday:
+          type: string
+          nullable: true
+          example: "10:00-19:00"
+        saturday:
+          type: string
+          nullable: true
+          example: "Выходной"
+        sunday:
+          type: string
+          nullable: true
+          example: "Выходной"
+
+    PauseSessionRequest:
+      type: object
+      required:
+        - session_id
+      properties:
+        session_id:
+          type: integer
+          format: int64
+          example: 1
+        reason:
+          type: string
+          nullable: true
+          example: "Обед"
+          description: Причина паузы (обед, кофе и т.д.)
+
+    ResumeSessionRequest:
+      type: object
+      required:
+        - session_id
+      properties:
+        session_id:
+          type: integer
+          format: int64
+          example: 1
+
+    EndSessionRequest:
+      type: object
+      required:
+        - session_id
+      properties:
+        session_id:
+          type: integer
+          format: int64
+          example: 1
+
+    SessionDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        user_id:
+          type: integer
+          format: int64
+          example: 1
+        start_time:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+        end_time:
+          type: integer
+          format: int64
+          nullable: true
+          description: Unix timestamp
+          example: 1641081600
+        total_duration:
+          type: integer
+          format: int64
+          nullable: true
+          description: Продолжительность в секундах
+          example: 28800
+        current_duration:
+          type: integer
+          format: int64
+          nullable: true
+          description: Текущая продолжительность сессии в секундах (только для today endpoint, без учета перерывов)
+          example: 14400
+        is_active:
+          type: boolean
+          example: true
+        breaks:
+          type: array
+          items:
+            $ref: '#/components/schemas/BreakDTO'
+          nullable: true
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+
+    BreakDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        session_id:
+          type: integer
+          format: int64
+          example: 1
+        reason:
+          type: string
+          nullable: true
+          example: "Обед"
+        start_time:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+        end_time:
+          type: integer
+          format: int64
+          nullable: true
+          description: Unix timestamp
+          example: 1641081600
+        duration:
+          type: integer
+          format: int64
+          nullable: true
+          description: Продолжительность в секундах
+          example: 3600
+        is_active:
+          type: boolean
+          example: false
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+
+    SessionHistoryResponse:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionDTO'
+        total:
+          type: integer
+          example: 10
+          description: Количество сессий
+
+    StatisticsResponse:
+      type: object
+      properties:
+        avg_start_time:
+          type: string
+          example: "09:30:00"
+          description: Среднее время начала работы
+        avg_end_time:
+          type: string
+          example: "18:15:00"
+          description: Среднее время окончания работы
+        avg_duration:
+          type: integer
+          format: int64
+          example: 28800
+          description: Средняя продолжительность работы в секундах
+        presence_percent:
+          type: number
+          format: float
+          example: 85.5
+          description: Процент присутствия
+        late_arrivals:
+          type: integer
+          example: 5
+          description: Количество опозданий
+        early_leaves:
+          type: integer
+          example: 3
+          description: Количество ранних уходов
+        total_sessions:
+          type: integer
+          example: 120
+          description: Общее количество завершенных сессий
+        total_users:
+          type: integer
+          example: 25
+          description: Количество уникальных пользователей
+
+    DepartmentDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: IT отдел
+        description:
+          type: string
+          nullable: true
+          example: Отдел информационных технологий
+        manager_name:
+          type: string
+          nullable: true
+          example: Иван Иванов
+        manager_email:
+          type: string
+          nullable: true
+          example: ivan.ivanov@example.com
+        users_count:
+          type: integer
+          description: Количество сотрудников в отделе
+          example: 15
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+        updated_at:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+
+    CreateDepartmentRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: IT отдел
+        description:
+          type: string
+          nullable: true
+          example: Отдел информационных технологий
+        manager_id:
+          type: integer
+          format: int64
+          nullable: true
+          example: 5
+
+    UpdateDepartmentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: IT отдел
+        description:
+          type: string
+          nullable: true
+          example: Отдел информационных технологий
+        manager_id:
+          type: integer
+          format: int64
+          nullable: true
+          example: 5
+
+    DepartmentListResponse:
+      type: object
+      properties:
+        departments:
+          type: array
+          items:
+            $ref: '#/components/schemas/DepartmentDTO'
+        total:
+          type: integer
+          format: int64
+          example: 100
+        page:
+          type: integer
+          example: 1
+        page_size:
+          type: integer
+          example: 20
+        total_pages:
+          type: integer
+          example: 5
+
+    DepartmentUsersRequest:
+      type: object
+      required:
+        - user_ids
+      properties:
+        user_ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+          example: [1, 2, 3]
+
+    DepartmentUsersResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserDTO'
+        total:
+          type: integer
+          example: 10
+
+    PositionDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: Senior Developer
+        description:
+          type: string
+          nullable: true
+          example: Старший разработчик
+        created_at:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+
+    PositionListResponse:
+      type: object
+      properties:
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PositionDTO'
+
+    CreatePositionRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Senior Developer
+        description:
+          type: string
+          nullable: true
+          example: Старший разработчик
+
+    UpdatePositionRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: Senior Developer
+        description:
+          type: string
+          nullable: true
+          example: Старший разработчик
+
+    AbsenceItemDTO:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          example: 1
+        user_name:
+          type: string
+          example: Иван Иванов
+        type:
+          type: string
+          enum: [absence, long_break]
+          example: absence
+        start_date:
+          type: integer
+          format: int64
+          description: Unix timestamp
+          example: 1640995200
+        end_date:
+          type: integer
+          format: int64
+          nullable: true
+          description: Unix timestamp
+          example: 1641081600
+        reason:
+          type: string
+          example: Больничный
+        duration:
+          type: integer
+          format: int64
+          nullable: true
+          description: Длительность в секундах (только для long_break)
+          example: 3600
+
+    AbsencesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AbsenceItemDTO'
+        total:
+          type: integer
+          example: 15
+
+    TopPerformerDTO:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          format: int64
+          example: 1
+        user_name:
+          type: string
+          example: Иван Иванов
+        department_id:
+          type: integer
+          format: int64
+          nullable: true
+          example: 2
+        department_name:
+          type: string
+          nullable: true
+          example: IT отдел
+        engagement:
+          type: number
+          format: float
+          example: 0.85
+          description: Вовлеченность (0-1, где 1 - максимальная вовлеченность)
+        avg_work_time:
+          type: number
+          format: float
+          example: 8.5
+          description: Среднее рабочее время в часах
+
+    TopPerformersResponse:
+      type: object
+      properties:
+        performers:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopPerformerDTO'
+        total:
+          type: integer
+          example: 10
+
+    AverageWorktimeResponse:
+      type: object
+      properties:
+        department_id:
+          type: integer
+          format: int64
+          example: 2
+        department_name:
+          type: string
+          nullable: true
+          example: IT отдел
+        period:
+          type: string
+          enum: [week, month, year]
+          example: month
+        avg_hours:
+          type: number
+          format: float
+          example: 7.5
+          description: Среднее рабочее время в часах
+
+    DepartmentDetailsResponse:
+      type: object
+      properties:
+        department_id:
+          type: integer
+          format: int64
+          example: 2
+        department_name:
+          type: string
+          nullable: true
+          example: IT отдел
+        from_date:
+          type: string
+          format: date
+          description: Начальная дата (формат YYYY-MM-DD)
+          example: "2025-10-01"
+        to_date:
+          type: string
+          format: date
+          description: Конечная дата (формат YYYY-MM-DD)
+          example: "2025-10-31"
+        avg_worktime_hours:
+          type: number
+          format: float
+          example: 7.5
+          description: Среднее рабочее время в часах
+        avg_break_minutes:
+          type: number
+          format: float
+          example: 45.5
+          description: Среднее время перерыва в минутах
+        employees_count:
+          type: integer
+          example: 15
+          description: Количество сотрудников в отделе
+        schedule_deviations:
+          type: integer
+          example: 5
+          description: Количество отклонений от графика (начал позже или закончил раньше на 30+ минут)
+        total_sessions:
+          type: integer
+          example: 120
+          description: Общее количество рабочих сессий за период
+
+    DailyEngagementItem:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Дата (формат YYYY-MM-DD)
+          example: "2025-10-01"
+        engagement:
+          type: number
+          format: float
+          description: Средняя вовлеченность за день (0-1)
+          example: 0.85
+
+    DailyEngagementResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyEngagementItem'
+          description: Массив данных по дням
